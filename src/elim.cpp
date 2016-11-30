@@ -322,7 +322,7 @@ inline void Internal::elim_add_resolvents (int pivot) {
 	  else if (c->blocked) blit = c->blocked;
 	  else blit = d->blocked;
 	  assert (blit);
-	  assert (blit==INT_MIN || bli ==c->blocked || blit==d->blocked);
+	  assert (blit==INT_MIN || blit==c->blocked || blit==d->blocked);
 	  turn_into_redundant_blocked_clause (r, blit);
 	}
       }
