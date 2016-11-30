@@ -86,6 +86,19 @@ bool Internal::propagate () {
   while (!conflict && propagated < trail.size ()) {
     const int lit = -trail[propagated++];
     LOG ("propagating %d", -lit);
+    {
+      Var & v = var (lit);
+      Clause * reason = v.reason;
+      if (reason) {
+	int blocked = reason->blocked;
+	if (blocked) {
+	  assert (blocked != lit);
+	  if (blocked == INT_MIN) stats.blockpropunknown++;
+	  else if (blocked == -lit) stats.blockpropblit++;
+	  else stats.blockpropnonblit++;
+	}
+      }
+    }
     Watches & ws = watches (lit);
     const_watch_iterator i = ws.begin ();
     watch_iterator j = ws.begin ();

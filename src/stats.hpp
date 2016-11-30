@@ -39,6 +39,11 @@ struct Stats {
   long blockres;     // number of resolved clauses in BCE
   long blockres2;    // number of resolved binary clauses in BCE
   long blocktried;   // number of tried clauses in BCE
+
+  long blockpropblit; 	 // propagating blocked literal in blocked clause
+  long blockpropnonblit; // propagating non blocked literal
+  long blockpropunknown; // propagating through blocked x blocked resolvent
+
   long strengthened; // number of strengthened clauses
   long subirr;       // number of subsumed irredundant clauses
   long subred;       // number of subsumed redundant clauses

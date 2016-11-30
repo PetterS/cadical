@@ -307,12 +307,24 @@ inline void Internal::elim_add_resolvents (int pivot) {
       Clause *d = *j;
       if (!resolve_clauses (c, pivot, d)) continue;
       check_learned_clause ();
+      assert (!c->redundant || c->blocked);
+      assert (!d->redundant || d->blocked);
       if ((!c->redundant && !d->redundant) ||
-	  clause.size () <= (size_t) opts.blockeepsize) {
+	  (clause.size () <= (size_t) opts.blockeepsize &&
+	   (opts.blockeepres || !c->redundant || !d->redundant))) {
 	resolvents++;
 	Clause * r = new_resolved_irredundant_clause ();
 	if (!c->redundant && !d->redundant) elim_update_added (r);
-	else turn_into_redundant_blocked_clause (r);
+	else {
+	  int blit;
+	  if (c->blocked == d->blocked) blit = c->blocked;
+	  else if (c->blocked && d->blocked) blit = INT_MIN;
+	  else if (c->blocked) blit = c->blocked;
+	  else blit = d->blocked;
+	  assert (blit);
+	  assert (blit==INT_MIN || bli ==c->blocked || blit==d->blocked);
+	  turn_into_redundant_blocked_clause (r, blit);
+	}
       }
       clause.clear ();
     }

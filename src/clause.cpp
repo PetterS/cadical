@@ -87,7 +87,7 @@ Clause * Internal::new_clause (bool red, int glue) {
   c->garbage = false;
   c->reason = false;
   c->moved = false;
-  c->blocked = false;
+  c->blocked = 0;
   c->glue = glue;
   c->size = size;
   for (int i = 0; i < size; i++) c->literals[i] = clause[i];

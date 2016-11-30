@@ -154,7 +154,7 @@ Internal::subsume_clause (Clause * subsuming, Clause * subsumed) {
   assert (stats.redundant > 0);
   stats.redundant--;
   if (!subsuming->blocked) return;
-  subsuming->blocked = false;
+  subsuming->blocked = 0;
   assert (stats.redblocked > 0);
   stats.redblocked--;
 }

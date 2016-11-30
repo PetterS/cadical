@@ -44,6 +44,15 @@ void Stats::print (Internal * internal) {
   MSG ("  traversed:     %15ld   %10.2f    per visit",
     stats.traversed, relative (stats.traversed, stats.visits));
 #endif
+  MSG ("blockpropblit:   %15ld   %10.2f %% per propagation",
+    stats.blockpropblit,
+    percent (stats.blockpropblit, stats.propagations));
+  MSG ("blockpropnonblit:%15ld   %10.2f %% per propagation",
+    stats.blockpropnonblit,
+    percent (stats.blockpropnonblit, stats.propagations));
+  MSG ("blockpropunknown:%15ld   %10.2f %% per propagation",
+    stats.blockpropunknown,
+    percent (stats.blockpropunknown, stats.propagations));
   MSG ("probed:          %15ld   %10.2f    per failed",
     stats.probed, relative (stats.probed, stats.failed));
   MSG ("reused:          %15ld   %10.2f %%  per restart",
