@@ -109,7 +109,7 @@ size_t Internal::flush_occs (int lit) {
     c = *i;
     if (c->collect ()) continue;
     *j++ = c->moved ? c->copy : c;
-    if (!c->redundant) res++;
+    if (!c->redundant || c->blocked) res++;
   }
   os.resize (j - os.begin ());
   shrink_occs (os);

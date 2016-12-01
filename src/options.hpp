@@ -25,7 +25,7 @@ OPTION(arena,            int,    3, 0,  3, "1=clause,2=var,3=queue") \
 OPTION(block,           bool,    1, 0,  1, "blocked clause elimination") \
 OPTION(blockeepsize,     int,  1e9, 0,1e9, "max size kept blocked clauses") \
 OPTION(blockminclsize,   int,    2, 0,1e9, "minimum clause size for BVE") \
-OPTION(blockeepres,     bool,    0, 0,  1, "keep resolvent two blocked") \
+OPTION(blockeepres,     bool,    1, 0,  1, "keep resolvent two blocked") \
 OPTION(blockreleff,   double, 0.10, 0,  1, "relative block efficiency") \
 OPTION(blockmineff,   double,  1e6, 0,  1, "minimum block efficiency") \
 OPTION(blockwait,        int,    0, 0,1e9, "wait for blocking phase") \
