@@ -28,7 +28,7 @@ bool Internal::eliminating () {
 // schedule uses the two-side score 'noccs2', which needs explicit updates.
 
 inline void Internal::elim_update_added (Clause * c) {
-  assert (!c->redundant);
+  assert (!c->redundant || c->blocked);
   const const_literal_iterator end = c->end ();
   const_literal_iterator i;
   for (i = c->begin (); i != end; i++) {
@@ -48,7 +48,7 @@ inline void Internal::elim_update_added (Clause * c) {
 }
 
 inline void Internal::elim_update_removed (Clause * c, int except) {
-  assert (!c->redundant);
+  assert (!c->redundant || c->blocked);
   const const_literal_iterator end = c->end ();
   const_literal_iterator i;
   for (i = c->begin (); i != end; i++) {
@@ -110,13 +110,15 @@ bool Internal::resolve_clauses (Clause * c, int pivot, Clause * d) {
     else if (tmp < 0) continue;
     else mark (lit), clause.push_back (lit);
   }
+  COVER (eliminated);
   if (eliminated) {
     assert (c->redundant), assert (c->blocked);
     LOG (c, "eliminated literal %d in", eliminated);
   }
   if (satisfied) {
     LOG (c, "satisfied by %d antecedent", satisfied);
-    if (!c->redundant) elim_update_removed (c);
+    // if (!c->redundant) 
+      elim_update_removed (c);
   }
   if (satisfied || eliminated) {
     mark_garbage (c);
@@ -150,13 +152,15 @@ bool Internal::resolve_clauses (Clause * c, int pivot, Clause * d) {
   const size_t size = clause.size ();
   if (tautological || satisfied || eliminated || size <= 1) clause.clear ();
   
+  COVER (eliminated);
   if (eliminated) {
     assert (d->redundant), assert (c->blocked);
     LOG (d, "eliminated literal %d in ", eliminated);
   }
   if (satisfied) {
     LOG (d, "satisfied by %d antecedent", satisfied);
-    if (!d->redundant) elim_update_removed (d);
+    // if (!d->redundant) 
+      elim_update_removed (d);
   }
   if (satisfied || eliminated) {
     mark_garbage (d);
@@ -258,11 +262,11 @@ bool Internal::elim_resolvents_are_bounded (int pivot, long pos, long neg) {
   //
   for (i = ps.begin (); needed >= 0 && i != pe; i++) {
     Clause * c = *i;
-    if (c->redundant) continue;
+    // if (c->redundant) continue;
     if (c->garbage) { needed -= neg; continue; }
     for (j = ns.begin (); needed >= 0 && j != ne; j++) {
       Clause * d = *j;
-      if (d->redundant) continue;
+      // if (d->redundant) continue;
       if (d->garbage) { needed--; continue; }
       stats.elimrestried++;
       if (resolve_clauses (c, pivot, d)) {
@@ -322,8 +326,9 @@ inline void Internal::elim_add_resolvents (int pivot) {
 	  else if (c->blocked) blit = c->blocked;
 	  else blit = d->blocked;
 	  assert (blit);
-	  assert (blit==INT_MIN || bli ==c->blocked || blit==d->blocked);
+	  assert (blit==INT_MIN || blit==c->blocked || blit==d->blocked);
 	  turn_into_redundant_blocked_clause (r, blit);
+	  elim_update_added (r);
 	}
       }
       clause.clear ();
@@ -351,8 +356,7 @@ inline void Internal::mark_eliminated_clauses_as_garbage (int pivot) {
     Clause * c = *i;
     if (c->garbage) continue;
     mark_garbage (c);
-    if (c->redundant) continue;
-    push_on_extension_stack (c, pivot);
+    if (!c->redundant) push_on_extension_stack (c, pivot);
     elim_update_removed (c, pivot);
   }
   erase_occs (ps);
@@ -365,7 +369,7 @@ inline void Internal::mark_eliminated_clauses_as_garbage (int pivot) {
     Clause * d = *i;
     if (d->garbage) continue;
     mark_garbage (d);
-    if (d->redundant) continue;
+    //if (d->redundant) continue;
     elim_update_removed (d, -pivot);
   }
   erase_occs (ns);
@@ -445,7 +449,7 @@ bool Internal::elim_round () {
   const_clause_iterator i;
   for (i = clauses.begin (); i != eoc; i++) {
     Clause * c = *i;
-    if (c->garbage || c->redundant) continue;
+    if (c->garbage || (c->redundant && !c->blocked)) continue;
     const const_literal_iterator eol = c->end ();
     const_literal_iterator j;
     if (c->size > size_limit) {
@@ -587,6 +591,7 @@ void Internal::elim () {
     round++;
     if (stats.eliminations >= opts.blockwait) block ();
     if (!elim_round ()) break;
+    exit (stats.eliminated);
     if (unsat) break;
     if (round >= limit) break;             // stop after elimination
     long old_removed = stats.removed;
