@@ -613,8 +613,6 @@ void Internal::elim () {
     if (old_removed == stats.removed) break;
   }
 
-  if (stats.eliminations > 5) exit (active_variables ());
-
   if (!unsat) {
     init_watches ();
     connect_watches ();
