@@ -21,7 +21,7 @@ void Internal::watch_clause (Clause * c) {
 
 void Internal::mark_removed (Clause * c, int except) {
   LOG (c, "marking removed");
-  assert (!c->redundant);
+  assert (!c->redundant || c->blocked);
   const const_literal_iterator end = c->end ();
   const_literal_iterator i;
   for (i = c->begin (); i != end; i++)
@@ -143,6 +143,7 @@ void Internal::mark_garbage (Clause * c) {
     if (c->blocked) {
       assert (stats.redblocked > 0);
       stats.redblocked--;
+      mark_removed (c);
     }
   } else {
     assert (!c->blocked);

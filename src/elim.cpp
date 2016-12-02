@@ -222,23 +222,23 @@ bool Internal::elim_resolvents_are_bounded (int pivot, long pos, long neg) {
   const const_occs_iterator pe = ps.end (), ne = ns.end ();
   const_occs_iterator i, j;
   
-  size_t pm = 0, nm = 0;
+  long pm = 0, nm = 0;
 
   for (i = ps.begin (); i != pe; i++) {
     Clause * c = *i;
     assert (!c->garbage);
-    size_t tmp = c->size;
+    long tmp = c->size;
     if (tmp > pm) pm = tmp;
   }
 
   for (j = ns.begin (); j != ne; j++) {
     Clause * d = *j;
     assert (!d->garbage);
-    size_t tmp = d->size;
+    long tmp = d->size;
     if (tmp > nm) nm = tmp;
   }
 
-  if (pm + nm - 2 > (size_t) opts.elimclslim) {
+  if (pm + nm - 2 > opts.elimclslim) {
     LOG ("expecting one resolvent to exceed limit on resolvent size");
     return false;
   }
@@ -457,8 +457,13 @@ bool Internal::elim_round () {
       for (j = c->begin (); j != eol; j++)
         noccs2 (*j) = nocc2_limit_exceeded;        // thus not scheduled
     } else {
-      for (j = c->begin (); j != eol; j++)
-        if (active (*j)) noccs2 (*j)++;
+      bool satisfied = false;
+      for (j = c->begin (); !satisfied && j != eol; j++)
+	if (val (*j) > 0) satisfied = true;
+      if (satisfied) mark_garbage (c);
+      else
+	for (j = c->begin (); j != eol; j++)
+	  if (active (*j)) noccs2 (*j)++;
     }
   }
 
@@ -591,13 +596,14 @@ void Internal::elim () {
     round++;
     if (stats.eliminations >= opts.blockwait) block ();
     if (!elim_round ()) break;
-    exit (stats.eliminated);
     if (unsat) break;
     if (round >= limit) break;             // stop after elimination
     long old_removed = stats.removed;
     subsume_round ();
     if (old_removed == stats.removed) break;
   }
+
+  exit (active_variables ());
 
   if (!unsat) {
     init_watches ();

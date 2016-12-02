@@ -169,7 +169,7 @@ inline void Internal::strengthen_clause (Clause * c, int remove) {
   assert (c->size > 2);
   LOG (c, "removing %d in", remove);
   if (proof) proof->trace_strengthen_clause (c, remove);
-  if (!c->redundant) mark_removed (remove);
+  if (!c->redundant || c->blocked) mark_removed (remove);
   const const_literal_iterator end = c->end ();
   literal_iterator j = c->begin ();
   for (const_literal_iterator i = j; i != end; i++)
