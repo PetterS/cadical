@@ -5,6 +5,7 @@
 #include "util.hpp"
 
 #include <cstring>
+#include <cctype>
 
 namespace CaDiCaL {
 
@@ -74,6 +75,7 @@ void Internal::report (char type, bool verbose) {
   if (!opts.log)
 #endif
   if (opts.quiet || (verbose && !opts.verbose)) return;
+  assert (!verbose || isupper (type));
   const int max_reports = 32;
   Report reports[max_reports];
   int n = 0;
