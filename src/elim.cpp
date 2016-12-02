@@ -443,7 +443,9 @@ bool Internal::elim_round () {
   const long nocc2_limit = opts.elimocclim;
   const long nocc2_limit_exceeded = nocc2_limit + 1;
 
-  // First compute the number of occurrences of each literal.
+  // First compute the number of occurrences of each literal and at the same
+  // time mark satisfied clauses and update 'removed' flags of variables in
+  // clauses with root level assigned literals (both false and true).
   //
   const_clause_iterator eoc = clauses.end ();
   const_clause_iterator i;
@@ -457,13 +459,21 @@ bool Internal::elim_round () {
       for (j = c->begin (); j != eol; j++)
         noccs2 (*j) = nocc2_limit_exceeded;        // thus not scheduled
     } else {
-      bool satisfied = false;
-      for (j = c->begin (); !satisfied && j != eol; j++)
-	if (val (*j) > 0) satisfied = true;
+      bool satisfied = false, falsified = false;
+      for (j = c->begin (); !satisfied && j != eol; j++) {
+	const int lit = *j, tmp = val (lit);
+	if (tmp > 0) satisfied = true;
+	else if (tmp < 0) falsified = true;
+      }
       if (satisfied) mark_garbage (c);
-      else
-	for (j = c->begin (); j != eol; j++)
-	  if (active (*j)) noccs2 (*j)++;
+      else {
+	for (j = c->begin (); j != eol; j++) {
+	  const int lit = *j;
+	  if (!active (lit)) continue;
+	  if (falsified) mark_removed (lit);
+	  noccs2 (lit)++;
+	}
+      }
     }
   }
 
@@ -603,7 +613,7 @@ void Internal::elim () {
     if (old_removed == stats.removed) break;
   }
 
-  exit (active_variables ());
+  if (stats.eliminations > 5) exit (active_variables ());
 
   if (!unsat) {
     init_watches ();
