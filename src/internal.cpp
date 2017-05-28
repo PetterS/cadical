@@ -14,6 +14,7 @@ Internal::Internal ()
   vsize (0),
   max_var (0),
   level (0),
+  grow (0),
   vals (0),
   marks (0),
   phases (0),

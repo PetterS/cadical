@@ -222,7 +222,7 @@ bool Internal::elim_resolvents_are_bounded (int pivot, long pos, long neg) {
   // positive and negative occurrences, such that the number of clauses to
   // be added is at most the number of removed clauses.
   //
-  long bound = pos + neg;
+  long bound = pos + neg + grow;
   assert (bound <= noccs2 (pivot)); // not '==' due to 'garbage_collection'
 
   LOG ("try to eliminate %d with %ld = %ld + %ld occurrences",
@@ -600,7 +600,7 @@ void Internal::elim () {
   int old_eliminated = stats.all.eliminated;
   int old_var = active_variables ();
 
-  int round = 0, limit;
+  int total_round = 0, limit;
 
   if (stats.eliminations) limit = opts.elimrounds;
   else limit = opts.elimroundsinit;
@@ -614,11 +614,23 @@ void Internal::elim () {
   if (level) backtrack ();
   reset_watches ();             // saves lots of memory
 
+  grow = 0;
+  int n_cls_init = stats.irredundant;
+
+while (!unsat) {
+
+  int round = 0;
+
+  int n_cls_last = stats.irredundant;
+  int n_vars_last = active_variables ();
+  int old_eliminated2 = stats.all.eliminated;
+
   // Alternate variable elimination and subsumption until nothing changes or
   // the round limit is hit.
   //
   for (;;) {
     round++;
+    total_round++;
     if (!elim_round ()) break;
     if (unsat) break;
     if (round >= limit) break;             // stop after elimination
@@ -626,6 +638,27 @@ void Internal::elim () {
     subsume_round ();
     if (old_removed == stats.removed) break;
   }
+
+  if (grow >= opts.grow) break;
+  if (old_eliminated2 == stats.all.eliminated) break;
+  // if (active_variables () < 10000) break;
+  if (active_variables () * 10l < stats.irredundant) break;
+  int n_cls_now = stats.irredundant;
+  int n_vars_now = active_variables ();
+  if (n_cls_now > n_cls_init) break;
+  if (!n_cls_last) break;
+  if (!n_vars_now) break;
+  double cl_inc_rate = n_cls_now / (double) n_cls_last;
+  double var_dec_rate = n_vars_last / (double) n_vars_now;
+  if (cl_inc_rate > var_dec_rate) break;
+
+  grow = grow ? 2*grow : 8;
+
+  for (int idx = 1; idx <= max_var; idx++) {
+    if (!active (idx)) continue;
+    mark_removed (idx);
+  }
+}
 
   if (!unsat) {
     init_watches ();
@@ -644,8 +677,8 @@ void Internal::elim () {
   int eliminated = stats.all.eliminated - old_eliminated;
   double relelim = percent (eliminated, old_var);
   VRB ("elim", stats.eliminations,
-    "eliminated %d variables %.2f%% in %d rounds",
-    eliminated, relelim, round);
+    "eliminated %d variables %.2f%% in %d total rounds",
+    eliminated, relelim, total_round);
 
   // Schedule next elimination based on number of eliminated variables.
   //

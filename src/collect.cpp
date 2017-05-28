@@ -234,7 +234,7 @@ void Internal::copy_non_garbage_clauses () {
 
     // If the option 'opts.arena == 1' is set, then this means the solver
     // uses the original order of clauses.  If there are no watches, we can
-    // not use the watched based copying policies below.  This happens if
+    // not use the watches based copying policies below.  This happens if
     // garbage collection is triggered during bounded variable elimination.
 
     // Copy clauses according to the order of calling 'copy_clause', which

@@ -110,6 +110,7 @@ class Internal {
   size_t vsize;                 // actually allocated variable data size
   int max_var;                  // (internal) maximum variable index
   int level;                    // decision level ('control.size () - 1')
+  int grow;
   signed char * vals;           // assignment          [-max_var,max_var]
   signed char * marks;          // signed marks        [1,max_var]
   signed char * phases;         // saved assignment    [1,max_var]
